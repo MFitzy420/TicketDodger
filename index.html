@@ -12,15 +12,18 @@
       text-align: center;
       padding: 3rem 1rem;
     }
+
     h1 {
       font-size: 2.5rem;
       margin-bottom: 0.5rem;
     }
+
     p {
       font-size: 1.2rem;
       max-width: 600px;
       margin: 0 auto 1.5rem;
     }
+
     .cta-button {
       display: inline-block;
       background: #22aa66;
@@ -32,9 +35,11 @@
       text-decoration: none;
       transition: background 0.3s ease;
     }
+
     .cta-button:hover {
       background: #1c8a55;
     }
+
     footer {
       margin-top: 3rem;
       font-size: 0.9rem;
@@ -44,14 +49,15 @@
     /* Chat Widget Styling */
     #chatbox {
       position: fixed;
-      bottom: 20px;
-      right: 20px;
-      width: 300px;
-      height: 400px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 400px;
+      height: 550px;
       background: #fff;
       border: 1px solid #ccc;
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
       overflow: hidden;
       display: flex;
       flex-direction: column;
@@ -59,9 +65,18 @@
       z-index: 9999;
     }
 
+    #chatbox header {
+      background: #22aa66;
+      color: #fff;
+      padding: 12px;
+      font-weight: bold;
+      text-align: center;
+      font-size: 1rem;
+    }
+
     #chatlog {
       flex: 1;
-      padding: 10px;
+      padding: 12px;
       overflow-y: auto;
       font-size: 14px;
       text-align: left;
@@ -72,6 +87,12 @@
       padding: 10px;
       border: none;
       outline: none;
+      font-size: 14px;
+    }
+
+    #chat-controls {
+      display: flex;
+      border-top: 1px solid #eee;
     }
 
     #chatbox button {
@@ -85,6 +106,18 @@
     #chatbox button:hover {
       background: #1c8a55;
     }
+
+    #file-upload {
+      padding: 10px;
+      border-top: 1px solid #eee;
+      font-size: 14px;
+      background: #f9f9f9;
+    }
+
+    #file-upload input {
+      font-size: 14px;
+      margin-top: 4px;
+    }
   </style>
 </head>
 <body>
@@ -96,7 +129,7 @@
     Fighting unfair fines for the everyday driver.
   </p>
 
-  <a class="cta-button" href="https://buy.stripe.com/test_4gw7wggYxxxxxxy9AA" target="_blank">Use for £1</a>
+  <a class="cta-button" href="https://buy.stripe.com/test_4gw7wggYxxxxxxy9AA" target="_blank">Donate £3 to keep us fighting tickets</a>
 
   <p style="margin-top: 2rem;">or<br><a href="mailto:support@ticketdodger.co.uk">Get help by email</a></p>
 
@@ -106,9 +139,15 @@
 
   <!-- Chat Widget -->
   <div id="chatbox">
-    <div style="background:#22aa66;color:#fff;padding:10px;text-align:center;font-weight:bold;">Ticket Dodger Chat</div>
+    <header>Ticket Dodger Chat</header>
     <div id="chatlog"></div>
-    <div style="display:flex;border-top:1px solid #eee;">
+    
+    <div id="file-upload">
+      📎 Upload your parking ticket:
+      <input type="file" id="ticketFile" accept=".jpg,.jpeg,.png,.pdf" />
+    </div>
+
+    <div id="chat-controls">
       <input type="text" id="userinput" placeholder="Type your question..." />
       <button onclick="sendMessage()">➤</button>
     </div>
@@ -116,17 +155,24 @@
 
   <!-- GPT Script -->
   <script>
-    const apiKey = 'YOUR_OPENAI_API_KEY_HERE'; // Replace with your actual API key
+    const apiKey = 'YOUR_OPENAI_API_KEY_HERE'; // Replace with your actual key
 
     async function sendMessage() {
       const input = document.getElementById("userinput");
       const chatlog = document.getElementById("chatlog");
+      const fileInput = document.getElementById("ticketFile");
       const userMessage = input.value.trim();
       if (!userMessage) return;
 
       chatlog.innerHTML += `<div><strong>You:</strong> ${userMessage}</div>`;
       input.value = '';
       chatlog.scrollTop = chatlog.scrollHeight;
+
+      // Optional file attachment info
+      let fileNote = '';
+      if (fileInput.files.length > 0) {
+        fileNote = `Note: User uploaded a file named "${fileInput.files[0].name}"`;
+      }
 
       const response = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
@@ -138,7 +184,7 @@
           model: "gpt-3.5-turbo",
           messages: [
             { role: "system", content: "You are Ticket Dodger, a friendly and knowledgeable assistant that helps people fight unfair parking fines in the UK. Provide calm, helpful, plain-English answers and suggest next steps clearly." },
-            { role: "user", content: userMessage }
+            { role: "user", content: userMessage + (fileNote ? `\n\n${fileNote}` : "") }
           ],
           temperature: 0.6
         })
