@@ -40,6 +40,51 @@
       font-size: 0.9rem;
       color: #888;
     }
+
+    /* Chat Widget Styling */
+    #chatbox {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 300px;
+      height: 400px;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      font-family: sans-serif;
+      z-index: 9999;
+    }
+
+    #chatlog {
+      flex: 1;
+      padding: 10px;
+      overflow-y: auto;
+      font-size: 14px;
+      text-align: left;
+    }
+
+    #userinput {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      outline: none;
+    }
+
+    #chatbox button {
+      padding: 10px;
+      background: #22aa66;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+    }
+
+    #chatbox button:hover {
+      background: #1c8a55;
+    }
   </style>
 </head>
 <body>
@@ -47,8 +92,8 @@
   <h1>🚗 Ticket Dodger</h1>
   <p>
     Got a parking fine you don’t deserve?<br>
-    Let AI write your appeal — quick, easy, no jargon.<br><br>
-    Fair fights only. No BS.
+    Let AI write your appeal — quick, easy, and jargon-free.<br><br>
+    Fighting unfair fines for the everyday driver.
   </p>
 
   <a class="cta-button" href="https://buy.stripe.com/test_4gw7wggYxxxxxxy9AA" target="_blank">Use for £1</a>
@@ -58,6 +103,53 @@
   <footer>
     © 2025 Ticket Dodger · Built to keep the system honest
   </footer>
+
+  <!-- Chat Widget -->
+  <div id="chatbox">
+    <div style="background:#22aa66;color:#fff;padding:10px;text-align:center;font-weight:bold;">Ticket Dodger Chat</div>
+    <div id="chatlog"></div>
+    <div style="display:flex;border-top:1px solid #eee;">
+      <input type="text" id="userinput" placeholder="Type your question..." />
+      <button onclick="sendMessage()">➤</button>
+    </div>
+  </div>
+
+  <!-- GPT Script -->
+  <script>
+    const apiKey = 'YOUR_OPENAI_API_KEY_HERE'; // Replace with your actual API key
+
+    async function sendMessage() {
+      const input = document.getElementById("userinput");
+      const chatlog = document.getElementById("chatlog");
+      const userMessage = input.value.trim();
+      if (!userMessage) return;
+
+      chatlog.innerHTML += `<div><strong>You:</strong> ${userMessage}</div>`;
+      input.value = '';
+      chatlog.scrollTop = chatlog.scrollHeight;
+
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: "gpt-3.5-turbo",
+          messages: [
+            { role: "system", content: "You are Ticket Dodger, a friendly and knowledgeable assistant that helps people fight unfair parking fines in the UK. Provide calm, helpful, plain-English answers and suggest next steps clearly." },
+            { role: "user", content: userMessage }
+          ],
+          temperature: 0.6
+        })
+      });
+
+      const data = await response.json();
+      const botReply = data.choices?.[0]?.message?.content || "Something went wrong. Try again later.";
+      chatlog.innerHTML += `<div><strong>Dodger:</strong> ${botReply}</div>`;
+      chatlog.scrollTop = chatlog.scrollHeight;
+    }
+  </script>
 
 </body>
 </html>
